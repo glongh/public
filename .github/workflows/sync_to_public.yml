@@ -1,0 +1,32 @@
+name: Sync to Public Repo
+
+on:
+  push:
+    branches:
+      - main  # or any branch you want
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code from private repo
+      uses: actions/checkout@v2
+
+    - name: Push to public repo
+      env:
+        DEPLOY_KEY: ${{ secrets.PUBLIC_REPO_DEPLOY_KEY }}
+      run: |
+        # Setup SSH agent
+        echo "$DEPLOY_KEY" | tr -d '\r' > deploy_key
+        chmod 600 deploy_key
+        eval "$(ssh-agent -s)"
+        ssh-add deploy_key
+
+        # Set up git user and email
+        git config --global user.name "Gaston"
+        git config --global user.email "glongh@example.com"
+
+        # Add public repo as a remote and push changes
+        git remote add public git@github.com:glongh/public.git
+        git push public main
